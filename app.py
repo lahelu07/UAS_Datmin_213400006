@@ -28,8 +28,7 @@ with st.form("prediction_form"):
     shipping_month = st.number_input("Shipping Month", min_value=1, max_value=12, value=1)
     shipping_day = st.number_input("Shipping Day", min_value=1, max_value=31, value=1)
 
-    # Add other required features (assuming a simplified input scenario)
-    # Replace these placeholders with the actual required features if known
+    # Additional features
     feature_1 = st.number_input("Feature 1 Value", value=0)
     feature_2 = st.number_input("Feature 2 Value", value=0)
 
@@ -39,6 +38,14 @@ with st.form("prediction_form"):
 # Prediction logic
 if submit_button:
     try:
+        # Validate date inputs
+        try:
+            order_date = pd.Timestamp(year=order_year, month=order_month, day=order_day)
+            shipping_date = pd.Timestamp(year=shipping_year, month=shipping_month, day=shipping_day)
+        except ValueError as ve:
+            st.error(f"Invalid date input: {ve}")
+            st.stop()
+
         # Create input dataframe
         input_data = pd.DataFrame({
             'order_year': [order_year],
@@ -53,6 +60,7 @@ if submit_button:
 
         # Predict delay
         prediction = model.predict(input_data)
-        st.write(f"Predicted Shipping Delay: **{prediction[0]:.2f} days**")
+        st.success(f"Predicted Shipping Delay: **{prediction[0]} days**")
+
     except Exception as e:
         st.error(f"An error occurred during prediction: {e}")
