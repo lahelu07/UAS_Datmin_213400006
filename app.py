@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 
 # Load the trained model
 try:
-    model = joblib.load('best_decision_tree_model.pkl')
+    model = joblib.load('best_decision_tree_model(updated).pkl')
     st.success("Model successfully loaded!")
 except FileNotFoundError:
-    st.error("The model file 'best_decision_tree_model.pkl' was not found. Please upload the model.")
+    st.error("The model file 'best_decision_tree_model(updated).pkl' was not found. Please upload the model.")
     st.stop()
 
 # App Title
