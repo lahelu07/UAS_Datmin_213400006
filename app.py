@@ -5,7 +5,7 @@ import numpy as np
 
 # Load the trained model
 try:
-    model = joblib.load('best_decision_tree_model(1).pkl')
+    model = joblib.load('best_decision_tree_model.pkl')
     st.success("Model successfully loaded!")
 except FileNotFoundError:
     st.error("The model file 'best_decision_tree_model.pkl' was not found. Please upload the model.")
