@@ -17,49 +17,76 @@ def load_data():
     except UnicodeDecodeError:
         return pd.read_csv(DATA_PATH, encoding='ISO-8859-1')
 
+def preprocess_data(data):
+    # Feature engineering
+    data['order_year'] = pd.DatetimeIndex(data['order date (DateOrders)']).year
+    data['order_month'] = pd.DatetimeIndex(data['order date (DateOrders)']).month
+    data['order_day'] = pd.DatetimeIndex(data['order date (DateOrders)']).day
+    data['shipping_year'] = pd.DatetimeIndex(data['shipping date (DateOrders)']).year
+    data['shipping_month'] = pd.DatetimeIndex(data['shipping date (DateOrders)']).month
+    data['shipping_day'] = pd.DatetimeIndex(data['shipping date (DateOrders)']).day
+
+    # Drop unused columns
+    data.drop(columns=['order date (DateOrders)', 'shipping date (DateOrders)', 'Category Name'], inplace=True)
+
+    # One-hot encoding
+    data = pd.get_dummies(data)
+    return data
+
 # Initialize app
 st.title("Shipment Time Prediction App")
-st.write("This app predicts shipment delivery times for domestic and international customers.")
+st.write("This app predicts shipment delivery times based on provided inputs.")
 
 # Load resources
 model = load_model()
-data = load_data()
+raw_data = load_data()
 
-# Input section
-shipment_type = st.selectbox("Select Shipment Type:", ["Domestic", "International"])
+# Preprocess dataset
+data = preprocess_data(raw_data)
 
-# Filter relevant data based on shipment type
-data_filtered = data[data['Shipment Mode'] == shipment_type]
-
-destination = st.text_input("Destination:", placeholder="Enter destination (e.g., city)")
-product_category = st.selectbox("Product Category:", data_filtered['Product Category'].unique())
-warehouse = st.selectbox("Warehouse:", data_filtered['Warehouse'].unique())
-
-# Additional input fields
+# Input section (based on features in X)
+st.write("### Input Features")
+order_year = st.number_input("Order Year", min_value=2000, max_value=2025, step=1)
+order_month = st.number_input("Order Month", min_value=1, max_value=12, step=1)
+order_day = st.number_input("Order Day", min_value=1, max_value=31, step=1)
+shipping_year = st.number_input("Shipping Year", min_value=2000, max_value=2025, step=1)
+shipping_month = st.number_input("Shipping Month", min_value=1, max_value=12, step=1)
+shipping_day = st.number_input("Shipping Day", min_value=1, max_value=31, step=1)
 demand = st.number_input("Demand (units):", min_value=1, step=1)
 weight = st.number_input("Weight (kg):", min_value=0.1, step=0.1)
-priority = st.selectbox("Shipping Priority:", ["Low", "Medium", "High", "Critical"])
+
+# One-hot encoded categorical columns
+categorical_features = {
+    "Product Category": data.filter(like="Product Category").columns.tolist(),
+    "Warehouse": data.filter(like="Warehouse").columns.tolist(),
+    "Priority": data.filter(like="Priority").columns.tolist()
+}
+
+input_data = {}
+
+for feature, options in categorical_features.items():
+    selected_option = st.selectbox(f"Select {feature}:", options)
+    input_data.update({col: 1 if col == selected_option else 0 for col in options})
+
+# Add numerical features to input_data
+input_data.update({
+    "order_year": order_year,
+    "order_month": order_month,
+    "order_day": order_day,
+    "shipping_year": shipping_year,
+    "shipping_month": shipping_month,
+    "shipping_day": shipping_day,
+    "demand": demand,
+    "weight": weight
+})
 
 # Predict button
 if st.button("Predict Delivery Time"):
-    # Prepare input features
-    input_features = {
-        "Shipment Type": shipment_type,
-        "Destination": destination,
-        "Product Category": product_category,
-        "Warehouse": warehouse,
-        "Demand": demand,
-        "Weight": weight,
-        "Priority": priority
-    }
-    
-    # Convert to DataFrame for model input
-    input_df = pd.DataFrame([input_features])
+    # Convert input_data to DataFrame
+    input_df = pd.DataFrame([input_data])
 
     # Make prediction
     prediction = model.predict(input_df)[0]
 
     # Display result
     st.success(f"Estimated Delivery Time: {prediction} days")
-
-st.write("\n\n**Note**: Ensure that your input values align with the dataset structure for accurate predictions.")
