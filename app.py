@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
-import joblib
+import pickle
 
 # Fungsi untuk memuat model
 @st.cache_resource
 def load_model():
     try:
-        # Muat model menggunakan joblib
-        model = joblib.load('best_decision_tree_model(final).pkl')
+        with open('best_decision_tree_model(final).pkl', 'rb') as file:
+            model = pickle.load(file)
         if not hasattr(model, "predict"):
             st.error("File .pkl tidak berisi model prediksi yang valid. Pastikan file adalah model Scikit-learn.")
             return None
@@ -27,11 +27,20 @@ model = load_model()
 if model is None:
     st.stop()  # Hentikan aplikasi jika model tidak valid
 
+# Fitur yang dibutuhkan model
+fitur_model = [
+    'days_for_shipping_real',
+    'days_for_shipment_scheduled',
+    'order_item_quantity',
+    'sales',
+    'order_profit_per_order'
+]
+
 # Sidebar untuk input data pengguna
 st.sidebar.header("Masukkan Data untuk Prediksi")
 input_data = {}
 
-# Form input untuk masing-masing fitur numerik
+# Form input untuk masing-masing fitur
 input_data['days_for_shipping_real'] = st.sidebar.number_input(
     "Days for Shipping (Real)", min_value=0, max_value=100, step=1, value=5
 )
@@ -60,7 +69,14 @@ if st.button("Prediksi"):
         # Lakukan prediksi
         prediction = model.predict(input_df)[0]
 
+        # Konversi hasil prediksi ke dalam hari, jam, dan menit
+        total_hours = prediction * 24  # Konversi hari ke jam
+        days = int(total_hours // 24)
+        hours = int(total_hours % 24)
+        minutes = int((total_hours % 1) * 60)
+
         # Tampilkan hasil prediksi
-        st.write(f"### Hasil Prediksi: Pengiriman kemungkinan akan terlambat selama **{prediction:.2f} hari**.")
+        st.write(f"### Hasil Prediksi:")
+        st.write(f"Pengiriman kemungkinan akan terlambat selama **{days} hari, {hours} jam, dan {minutes} menit**.")
     except Exception as e:
         st.error(f"Terjadi kesalahan saat melakukan prediksi: {e}")
