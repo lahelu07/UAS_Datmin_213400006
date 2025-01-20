@@ -22,6 +22,9 @@ expected_features = [
     'Delivery Status_Advance shipping', 
     'Delivery Status_Shipping canceled', 
     'Delivery Status_Shipping on time',
+    'Customer Segment_Consumer', 'Customer Segment_Corporate', 'Customer Segment_Home Office',
+    'Department Name_Apparel', 'Department Name_Book Shop', 'Department Name_Discs Shop',
+    'Department Name_Fan Shop', 'Department Name_Fitness',
 ]
 
 # Collect input features from the user
@@ -64,7 +67,7 @@ if submit_button:
             'Delivery Status_Shipping on time': [1 if delay_days == 0 else 0],
         }
 
-        # Ensure all expected features are present
+        # Add missing features with default values (0)
         for feature in expected_features:
             if feature not in input_data:
                 input_data[feature] = [0]  # Default value for missing features
