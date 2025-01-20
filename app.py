@@ -18,13 +18,10 @@ except FileNotFoundError:
 # Define the full list of features used during training
 expected_features = [
     'Benefit per order', 'Category Id', 'Customer Zipcode', 
-    'Customer Segment_Consumer', 'Customer Segment_Corporate', 
-    'Customer Segment_Home Office', 'Delivery Status_Late delivery', 
-    'Delivery Status_Advance shipping', 'Delivery Status_Shipping canceled', 
-    'Delivery Status_Shipping on time', 'Department Name_Apparel', 
-    'Department Name_Book Shop', 'Department Name_Discs Shop', 
-    'Department Name_Fan Shop', 'Department Name_Fitness', 
-    # Add all other features used during training
+    'Delivery Status_Late delivery', 
+    'Delivery Status_Advance shipping', 
+    'Delivery Status_Shipping canceled', 
+    'Delivery Status_Shipping on time',
 ]
 
 # Collect input features from the user
@@ -39,14 +36,6 @@ with st.form("prediction_form"):
     # Additional inputs
     benefit_per_order = st.number_input("Benefit per Order", value=0.0, step=0.1)
     category_id = st.selectbox("Category ID", [1, 2, 3, 4])  # Example categories
-    customer_segment = st.selectbox(
-        "Customer Segment", 
-        ['Consumer', 'Corporate', 'Home Office']
-    )
-    department_name = st.selectbox(
-        "Department Name", 
-        ['Apparel', 'Book Shop', 'Discs Shop', 'Fan Shop', 'Fitness']
-    )
 
     # Submit button
     submit_button = st.form_submit_button("Predict")
@@ -61,36 +50,19 @@ if submit_button:
             st.error("❌ Shipping date cannot be earlier than the order date!")
             st.stop()
 
-        # One-hot encoding for customer segment
-        segment_features = {
-            'Customer Segment_Consumer': 0,
-            'Customer Segment_Corporate': 0,
-            'Customer Segment_Home Office': 0,
-        }
-        segment_features[f"Customer Segment_{customer_segment}"] = 1
-
-        # One-hot encoding for department name
-        department_features = {
-            'Department Name_Apparel': 0,
-            'Department Name_Book Shop': 0,
-            'Department Name_Discs Shop': 0,
-            'Department Name_Fan Shop': 0,
-            'Department Name_Fitness': 0,
-        }
-        department_features[f"Department Name_{department_name}"] = 1
+        # Calculate delay in days
+        delay_days = (shipping_date - order_date).days
 
         # Create input dictionary
         input_data = {
             'Benefit per order': [benefit_per_order],
             'Category Id': [category_id],
             'Customer Zipcode': [0],  # Replace 0 with actual data if required
-            'Delivery Status_Late delivery': [0],
-            'Delivery Status_Advance shipping': [0],
-            'Delivery Status_Shipping canceled': [0],
-            'Delivery Status_Shipping on time': [1],  # Assume "on time" by default
+            'Delivery Status_Late delivery': [1 if delay_days > 0 else 0],
+            'Delivery Status_Advance shipping': [1 if delay_days < 0 else 0],
+            'Delivery Status_Shipping canceled': [0],  # Assuming no canceled shipping
+            'Delivery Status_Shipping on time': [1 if delay_days == 0 else 0],
         }
-        input_data.update(segment_features)  # Add one-hot encoded segment features
-        input_data.update(department_features)  # Add one-hot encoded department features
 
         # Ensure all expected features are present
         for feature in expected_features:
