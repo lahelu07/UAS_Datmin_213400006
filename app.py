@@ -51,24 +51,19 @@ if "input_values" not in st.session_state:
 
 # Form input untuk masing-masing fitur dengan nilai dinamis
 st.session_state.input_values['days_for_shipping_real'] = st.sidebar.number_input(
-    "Days for Shipping (Real)", min_value=0, max_value=100, step=1, 
-    value=st.session_state.input_values['days_for_shipping_real']
+    "Days for Shipping (Real)", min_value=0, max_value=100, step=1 
 )
 st.session_state.input_values['days_for_shipment_scheduled'] = st.sidebar.number_input(
-    "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1, 
-    value=st.session_state.input_values['days_for_shipment_scheduled']
+    "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1
 )
 st.session_state.input_values['order_item_quantity'] = st.sidebar.number_input(
     "Order Item Quantity", min_value=1, max_value=100, step=1, 
-    value=st.session_state.input_values['order_item_quantity']
 )
 st.session_state.input_values['sales'] = st.sidebar.number_input(
     "Sales", min_value=0.0, max_value=10000.0, step=1.0, 
-    value=st.session_state.input_values['sales']
 )
 st.session_state.input_values['order_profit_per_order'] = st.sidebar.number_input(
     "Order Profit Per Order", min_value=-500.0, max_value=500.0, step=1.0, 
-    value=st.session_state.input_values['order_profit_per_order']
 )
 
 # Simpan input dalam DataFrame
