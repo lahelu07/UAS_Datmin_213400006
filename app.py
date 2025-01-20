@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import joblib
+from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
 
 # Fungsi untuk memuat model
 @st.cache_resource
@@ -16,58 +17,73 @@ def load_model():
         st.error(f"Gagal memuat model: {e}")
         return None
 
+# Fungsi untuk memuat data pengujian
+@st.cache_resource
+def load_test_data():
+    # Pastikan file ini berisi data pengujian (X_test dan y_test)
+    try:
+        data = pd.read_csv('test_data.csv')  # Ganti dengan path file data pengujian Anda
+        X_test = data[[
+            'days_for_shipping_real',
+            'days_for_shipment_scheduled',
+            'order_item_quantity',
+            'sales',
+            'order_profit_per_order'
+        ]]
+        y_test = data['days_delayed']  # Target delay dalam hari
+        return X_test, y_test
+    except Exception as e:
+        st.error(f"Gagal memuat data pengujian: {e}")
+        return None, None
+
 # Judul aplikasi
 st.title("Aplikasi Prediksi Jumlah Hari Keterlambatan Pengiriman")
 
 # Deskripsi aplikasi
 st.write("Aplikasi ini memprediksi jumlah hari keterlambatan pengiriman berdasarkan input data.")
 
-# Muat model
+# Muat model dan data pengujian
 model = load_model()
-if model is None:
-    st.stop()  # Hentikan aplikasi jika model tidak valid
+X_test, y_test = load_test_data()
+if model is None or X_test is None or y_test is None:
+    st.stop()  # Hentikan aplikasi jika model atau data tidak valid
 
-# Fitur yang dibutuhkan model
-fitur_model = [
-    'days_for_shipping_real',
-    'days_for_shipment_scheduled',
-    'order_item_quantity',
-    'sales',
-    'order_profit_per_order'
-]
+# Hitung MAE dan MRE
+try:
+    y_pred = model.predict(X_test)
+    mae = mean_absolute_error(y_test, y_pred)
+    mre = mean_absolute_percentage_error(y_test, y_pred)
+
+    # Tampilkan hasil MAE dan MRE
+    st.write("### Evaluasi Model:")
+    st.write(f"- **Mean Absolute Error (MAE):** {mae:.2f} hari")
+    st.write(f"- **Mean Relative Error (MRE):** {mre:.2%}")
+except Exception as e:
+    st.error(f"Gagal menghitung evaluasi model: {e}")
 
 # Sidebar untuk input data pengguna
 st.sidebar.header("Masukkan Data untuk Prediksi")
+input_data = {}
 
-# Gunakan session state untuk menyimpan nilai input yang diperbarui
-if "input_values" not in st.session_state:
-    st.session_state.input_values = {
-        "days_for_shipping_real": 10,
-        "days_for_shipment_scheduled": 7,
-        "order_item_quantity": 2,
-        "sales": 90.0,
-        "order_profit_per_order": 500.0
-    }
-
-# Form input untuk masing-masing fitur dengan nilai dinamis
-st.session_state.input_values['days_for_shipping_real'] = st.sidebar.number_input(
-    "Days for Shipping (Real)", min_value=0, max_value=100, step=1 
+# Form input untuk masing-masing fitur
+input_data['days_for_shipping_real'] = st.sidebar.number_input(
+    "Days for Shipping (Real)", min_value=0, max_value=100, step=1, value=5
 )
-st.session_state.input_values['days_for_shipment_scheduled'] = st.sidebar.number_input(
-    "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1
+input_data['days_for_shipment_scheduled'] = st.sidebar.number_input(
+    "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1, value=3
 )
-st.session_state.input_values['order_item_quantity'] = st.sidebar.number_input(
-    "Order Item Quantity", min_value=1, max_value=100, step=1, 
+input_data['order_item_quantity'] = st.sidebar.number_input(
+    "Order Item Quantity", min_value=1, max_value=100, step=1, value=1
 )
-st.session_state.input_values['sales'] = st.sidebar.number_input(
-    "Sales", min_value=0.0, max_value=10000.0, step=1.0, 
+input_data['sales'] = st.sidebar.number_input(
+    "Sales", min_value=0.0, max_value=10000.0, step=1.0, value=100.0
 )
-st.session_state.input_values['order_profit_per_order'] = st.sidebar.number_input(
-    "Order Profit Per Order", min_value=-500.0, max_value=500.0, step=1.0, 
+input_data['order_profit_per_order'] = st.sidebar.number_input(
+    "Order Profit Per Order", min_value=-500.0, max_value=500.0, step=1.0, value=10.0
 )
 
-# Simpan input dalam DataFrame
-input_df = pd.DataFrame([st.session_state.input_values])
+# Konversi input pengguna ke DataFrame
+input_df = pd.DataFrame([input_data])
 
 st.write("### Input Data yang Diberikan:")
 st.write(input_df)
