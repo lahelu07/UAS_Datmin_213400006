@@ -38,27 +38,41 @@ fitur_model = [
 
 # Sidebar untuk input data pengguna
 st.sidebar.header("Masukkan Data untuk Prediksi")
-input_data = {}
 
-# Form input untuk masing-masing fitur
-input_data['days_for_shipping_real'] = st.sidebar.number_input(
-    "Days for Shipping (Real)", min_value=0, max_value=100, step=1, value=10
+# Gunakan session state untuk menyimpan nilai input yang diperbarui
+if "input_values" not in st.session_state:
+    st.session_state.input_values = {
+        "days_for_shipping_real": 10,
+        "days_for_shipment_scheduled": 7,
+        "order_item_quantity": 2,
+        "sales": 90.0,
+        "order_profit_per_order": 500.0
+    }
+
+# Form input untuk masing-masing fitur dengan nilai dinamis
+st.session_state.input_values['days_for_shipping_real'] = st.sidebar.number_input(
+    "Days for Shipping (Real)", min_value=0, max_value=100, step=1, 
+    value=st.session_state.input_values['days_for_shipping_real']
 )
-input_data['days_for_shipment_scheduled'] = st.sidebar.number_input(
-    "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1, value=7
+st.session_state.input_values['days_for_shipment_scheduled'] = st.sidebar.number_input(
+    "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1, 
+    value=st.session_state.input_values['days_for_shipment_scheduled']
 )
-input_data['order_item_quantity'] = st.sidebar.number_input(
-    "Order Item Quantity", min_value=1, max_value=100, step=1, value=2
+st.session_state.input_values['order_item_quantity'] = st.sidebar.number_input(
+    "Order Item Quantity", min_value=1, max_value=100, step=1, 
+    value=st.session_state.input_values['order_item_quantity']
 )
-input_data['sales'] = st.sidebar.number_input(
-    "Sales", min_value=0.0, max_value=10000.0, step=1.0, value=90.0
+st.session_state.input_values['sales'] = st.sidebar.number_input(
+    "Sales", min_value=0.0, max_value=10000.0, step=1.0, 
+    value=st.session_state.input_values['sales']
 )
-input_data['order_profit_per_order'] = st.sidebar.number_input(
-    "Order Profit Per Order", min_value=-500.0, max_value=500.0, step=1.0, value=500.0
+st.session_state.input_values['order_profit_per_order'] = st.sidebar.number_input(
+    "Order Profit Per Order", min_value=-500.0, max_value=500.0, step=1.0, 
+    value=st.session_state.input_values['order_profit_per_order']
 )
 
-# Konversi input pengguna ke DataFrame
-input_df = pd.DataFrame([input_data])
+# Simpan input dalam DataFrame
+input_df = pd.DataFrame([st.session_state.input_values])
 
 st.write("### Input Data yang Diberikan:")
 st.write(input_df)
