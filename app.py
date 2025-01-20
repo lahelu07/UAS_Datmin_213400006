@@ -42,7 +42,7 @@ input_data = {}
 
 # Form input untuk masing-masing fitur
 input_data['days_for_shipping_real'] = st.sidebar.number_input(
-    "Days for Shipping (Real)", min_value=0, max_value=100, step=1, value=10
+    "Days for Shipping (Real)", min_value=0, max_value=100, step=1, value=12
 )
 input_data['days_for_shipment_scheduled'] = st.sidebar.number_input(
     "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1, value=7
