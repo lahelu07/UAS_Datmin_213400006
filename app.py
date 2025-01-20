@@ -60,7 +60,19 @@ input_data['order_profit_per_order'] = st.sidebar.number_input(
 # Konversi input pengguna ke DataFrame
 input_df = pd.DataFrame([input_data])
 
+# Debugging: Tampilkan input data untuk validasi
 st.write("### Input Data yang Diberikan:")
+st.write(input_df)
+
+# Pastikan urutan kolom sesuai dengan fitur model
+try:
+    input_df = input_df[fitur_model]
+except KeyError as e:
+    st.error(f"Kolom input tidak sesuai dengan fitur model: {e}")
+    st.stop()
+
+# Debugging: Tampilkan input yang sudah diurutkan
+st.write("### Data yang Diproses untuk Model:")
 st.write(input_df)
 
 # Prediksi berdasarkan input pengguna
