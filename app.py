@@ -64,6 +64,20 @@ if submit_button:
             'feature_2': [feature_2],
         })
 
+        # Get model's expected features
+        model_features = getattr(model, "feature_names_in_", None)
+        if model_features is None:
+            st.error("Model feature names are not accessible. Please check your model.")
+            st.stop()
+
+        # Add missing features with default values (0)
+        for feature in model_features:
+            if feature not in input_data.columns:
+                input_data[feature] = 0
+
+        # Ensure column order matches the model's feature order
+        input_data = input_data[model_features]
+
         # Preview input data
         st.write("### Input Data Preview")
         st.dataframe(input_data)
