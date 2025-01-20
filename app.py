@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load dataset
-data_path = "DataCoSupplyChainDataset.csv"
+data_path = "E:\Semester 7\DATMIN\UAS_Datmin_213400006\DataCoSupplyChainDataset.csv"
 try:
     data = pd.read_csv(data_path)
     st.success("Dataset loaded successfully!")
@@ -23,7 +23,7 @@ except FileNotFoundError:
     st.stop()
 
 # Load the trained model
-model_path = 'best_decision_tree_model(updated).pkl'
+model_path = 'E:\Semester 7\DATMIN\UAS_Datmin_213400006\best_decision_tree_model(updated).pkl'
 try:
     model = joblib.load(model_path)
     st.success("Model successfully loaded!")
