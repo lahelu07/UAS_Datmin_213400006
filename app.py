@@ -17,10 +17,10 @@ def load_model():
         return None
 
 # Judul aplikasi
-st.title("Aplikasi Prediksi Keterlambatan Pengiriman")
+st.title("Aplikasi Prediksi Jumlah Hari Keterlambatan Pengiriman")
 
 # Deskripsi aplikasi
-st.write("Aplikasi ini memprediksi apakah pengiriman akan terlambat berdasarkan input data.")
+st.write("Aplikasi ini memprediksi jumlah hari keterlambatan pengiriman berdasarkan input data.")
 
 # Muat model
 model = load_model()
@@ -80,16 +80,8 @@ if st.button("Prediksi"):
     try:
         # Lakukan prediksi
         prediction = model.predict(input_df)[0]
-        prediction_proba = model.predict_proba(input_df)[0]
 
         # Tampilkan hasil prediksi
-        if prediction == 1:
-            st.write("### Hasil Prediksi: Pengiriman akan **TERLAMBAT**.")
-        else:
-            st.write("### Hasil Prediksi: Pengiriman **TEPAT WAKTU**.")
-
-        st.write("### Probabilitas Prediksi:")
-        st.write(f"- Tepat Waktu: {prediction_proba[0]:.2f}")
-        st.write(f"- Terlambat: {prediction_proba[1]:.2f}")
+        st.write(f"### Hasil Prediksi: Pengiriman kemungkinan akan terlambat selama **{prediction:.2f} hari**.")
     except Exception as e:
         st.error(f"Terjadi kesalahan saat melakukan prediksi: {e}")
