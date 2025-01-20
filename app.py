@@ -2,105 +2,54 @@ import streamlit as st
 import pandas as pd
 import pickle
 
-# Load model and data
-MODEL_PATH = 'best_decision_tree_model.pkl'
-DATA_PATH = 'DataCoSupplyChainDataset.csv'
-
+# Load the trained model
 def load_model():
-    with open(MODEL_PATH, 'rb') as file:
+    with open("best_decision_tree_model.pkl", "rb") as file:
         model = pickle.load(file)
     return model
 
-def load_data():
-    try:
-        return pd.read_csv(DATA_PATH, encoding='utf-8')
-    except UnicodeDecodeError:
-        return pd.read_csv(DATA_PATH, encoding='ISO-8859-1')
+# Load and preprocess dataset for display or feature insights
+def preprocess_data(file):
+    dataset = pd.read_csv(file, encoding='ISO-8859-1', delimiter=';')
+    # Assuming specific preprocessing (e.g., dropping unnecessary columns) is required
+    # Adjust this section based on your dataset features and model requirements
+    return dataset
 
-def preprocess_data(data):
-    required_columns = ['order date (DateOrders)', 'shipping date (DateOrders)', 'Category Name']
-    missing_columns = [col for col in required_columns if col not in data.columns]
-    
-    if missing_columns:
-        # Jika kolom hilang, tambahkan dengan nilai default (None)
-        for col in missing_columns:
-            data[col] = None
-        st.warning(f"Missing columns have been added with default values: {missing_columns}")
+# Predict function
+def make_prediction(model, input_data):
+    return model.predict(input_data)
 
-    date_order_col = 'order date (DateOrders)' if 'order date (DateOrders)' in data.columns else 'Order Date'
-    shipping_date_col = 'shipping date (DateOrders)' if 'shipping date (DateOrders)' in data.columns else 'Shipping Date'
-
-    # Feature engineering
-    data['order_year'] = pd.DatetimeIndex(data[date_order_col]).year
-    data['order_month'] = pd.DatetimeIndex(data[date_order_col]).month
-    data['order_day'] = pd.DatetimeIndex(data[date_order_col]).day
-    data['shipping_year'] = pd.DatetimeIndex(data[shipping_date_col]).year
-    data['shipping_month'] = pd.DatetimeIndex(data[shipping_date_col]).month
-    data['shipping_day'] = pd.DatetimeIndex(data[shipping_date_col]).day
-
-    # Drop unused columns jika ada
-    columns_to_drop = [date_order_col, shipping_date_col, 'Category Name']
-    data.drop(columns=[col for col in columns_to_drop if col in data.columns], inplace=True)
-
-    # One-hot encoding
-    data = pd.get_dummies(data)
-    return data
-
+# Streamlit app
 def main():
-    st.title("Shipment Time Prediction App")
-    st.write("This app predicts shipment delivery times based on provided inputs.")
+    st.title("Prediksi Pengiriman")
 
-    model = load_model()
-    raw_data = load_data()
+    # Upload dataset
+    uploaded_file = st.file_uploader("Upload Dataset CSV", type=["csv"])
 
-    # Debugging: Tampilkan data yang di-load
-    st.write("Loaded Dataset Sample:", raw_data.head())
-    st.write("Dataset Columns:", raw_data.columns.tolist())
+    if uploaded_file is not None:
+        # Display the dataset
+        dataset = preprocess_data(uploaded_file)
+        st.write("Dataset yang diunggah:", dataset.head())
 
-    # Preprocess dataset
-    data = preprocess_data(raw_data)
-    st.write("Preprocessed Dataset Columns:", data.columns.tolist())
+        # Allow user to select features for prediction
+        st.subheader("Masukkan Data untuk Prediksi")
 
-    # Input features
-    st.write("### Input Features")
-    order_year = st.number_input("Order Year", min_value=2000, max_value=2025, step=1)
-    order_month = st.number_input("Order Month", min_value=1, max_value=12, step=1)
-    order_day = st.number_input("Order Day", min_value=1, max_value=31, step=1)
-    shipping_year = st.number_input("Shipping Year", min_value=2000, max_value=2025, step=1)
-    shipping_month = st.number_input("Shipping Month", min_value=1, max_value=12, step=1)
-    shipping_day = st.number_input("Shipping Day", min_value=1, max_value=31, step=1)
-    demand = st.number_input("Demand (units):", min_value=1, step=1)
-    weight = st.number_input("Weight (kg):", min_value=0.1, step=0.1)
+        # Dynamically create input fields for required features
+        feature_inputs = {}
+        for feature in dataset.columns:
+            feature_inputs[feature] = st.text_input(f"{feature}", "")
 
-    categorical_features = {
-        "Product Category": data.filter(like="Product Category").columns.tolist(),
-        "Warehouse": data.filter(like="Warehouse").columns.tolist(),
-        "Priority": data.filter(like="Priority").columns.tolist()
-    }
+        # Convert inputs to DataFrame format
+        input_df = pd.DataFrame([feature_inputs])
 
-    input_data = {}
-    for feature, options in categorical_features.items():
-        selected_option = st.selectbox(f"Select {feature}:", options)
-        input_data.update({col: 1 if col == selected_option else 0 for col in options})
-
-    input_data.update({
-        "order_year": order_year,
-        "order_month": order_month,
-        "order_day": order_day,
-        "shipping_year": shipping_year,
-        "shipping_month": shipping_month,
-        "shipping_day": shipping_day,
-        "demand": demand,
-        "weight": weight
-    })
-
-    if st.button("Predict Delivery Time"):
-        input_df = pd.DataFrame([input_data])
-        try:
-            prediction = model.predict(input_df)[0]
-            st.success(f"Estimated Delivery Time: {prediction} days")
-        except Exception as e:
-            st.error(f"An error occurred during prediction: {e}")
+        # Predict button
+        if st.button("Prediksi"):
+            model = load_model()
+            try:
+                prediction = make_prediction(model, input_df)
+                st.success(f"Hasil Prediksi: {prediction[0]}")
+            except Exception as e:
+                st.error(f"Terjadi kesalahan: {e}")
 
 if __name__ == "__main__":
     main()
