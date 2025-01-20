@@ -63,20 +63,19 @@ input_df = pd.DataFrame([input_data])
 st.write("### Input Data yang Diberikan:")
 st.write(input_df)
 
-# Prediksi berdasarkan input pengguna
-if st.button("Prediksi"):
-    try:
-        # Lakukan prediksi
-        prediction = model.predict(input_df)[0]
+# Prediksi langsung setiap kali input berubah
+try:
+    # Lakukan prediksi
+    prediction = model.predict(input_df)[0]
 
-        # Konversi hasil prediksi ke dalam hari, jam, dan menit
-        total_hours = prediction * 24  # Konversi hari ke jam
-        days = int(total_hours // 24)
-        hours = int(total_hours % 24)
-        minutes = int((total_hours % 1) * 60)
+    # Konversi hasil prediksi ke dalam hari, jam, dan menit
+    total_hours = prediction * 24  # Konversi hari ke jam
+    days = int(total_hours // 24)
+    hours = int(total_hours % 24)
+    minutes = int((total_hours % 1) * 60)
 
-        # Tampilkan hasil prediksi
-        st.write(f"### Hasil Prediksi:")
-        st.write(f"Pengiriman kemungkinan akan terlambat selama **{days} hari, {hours} jam, dan {minutes} menit**.")
-    except Exception as e:
-        st.error(f"Terjadi kesalahan saat melakukan prediksi: {e}")
+    # Tampilkan hasil prediksi
+    st.write(f"### Hasil Prediksi:")
+    st.write(f"Pengiriman kemungkinan akan terlambat selama **{days} hari, {hours} jam, dan {minutes} menit**.")
+except Exception as e:
+    st.error(f"Terjadi kesalahan saat melakukan prediksi: {e}")
