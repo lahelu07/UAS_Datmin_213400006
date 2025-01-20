@@ -24,22 +24,21 @@ st.write("Aplikasi ini memprediksi apakah pengiriman akan terlambat berdasarkan 
 dataset = load_dataset()
 model = load_model()
 
-# Normalisasi nama kolom
-dataset.columns = dataset.columns.str.strip().str.lower().str.replace(' ', '_')
-fitur_model = [
-    'days_for_shipping_(real)',
-    'days_for_shipment_(scheduled)',
-    'shipping_mode',
-    'customer_segment',
-    'order_item_quantity',
-    'sales',
-    'order_profit_per_order',
-    'late_delivery_risk'
-]
-
 # Menampilkan nama kolom dalam dataset
-st.write("Nama kolom dalam dataset (dengan panjang):")
-st.write({col: len(col) for col in dataset.columns})
+st.write("Nama kolom dalam dataset:")
+st.write(dataset.columns.tolist())
+
+# Pastikan nama fitur sesuai dengan dataset Anda
+fitur_model = [
+    'Days_for_shipping (real)',
+    'Days_for_shipment_(scheduled)',
+    'Shipping_Mode',
+    'Customer_Segment',
+    'Order_Item_Quantity',
+    'Sales',
+    'Order_Profit_Per_Order',
+    'Late_delivery_risk'
+]
 
 # Input pengguna berdasarkan fitur yang diperlukan model
 st.sidebar.header("Input Data Pengguna")
@@ -64,12 +63,6 @@ input_df = pd.DataFrame([input_data])
 
 st.write("### Input yang Diberikan:")
 st.write(input_df)
-
-# Debugging untuk memastikan kolom input cocok dengan model
-if input_df.columns.tolist() != fitur_model:
-    st.error("Input data tidak cocok dengan fitur model. Periksa kembali nama kolom.")
-else:
-    st.write("Kolom input cocok dengan model.")
 
 # Prediksi berdasarkan input pengguna
 if st.button("Prediksi"):
