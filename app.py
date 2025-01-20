@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
-import pickle
+import joblib
 
 # Fungsi untuk memuat model
 @st.cache_resource
 def load_model():
     try:
-        with open('best_decision_tree_model(final).pkl', 'rb') as file:
-            model = pickle.load(file)
+        # Gunakan joblib untuk memuat model
+        model = joblib.load('best_decision_tree_model(final).pkl')
         if not hasattr(model, "predict"):
             st.error("File .pkl tidak berisi model prediksi yang valid. Pastikan file adalah model Scikit-learn.")
             return None
@@ -31,12 +31,11 @@ if model is None:
 fitur_model = [
     'days_for_shipping_real',
     'days_for_shipment_scheduled',
-    'shipping_mode',
-    'customer_segment',
     'order_item_quantity',
     'sales',
     'order_profit_per_order',
-    'late_delivery_risk'
+    'shipping_mode',
+    'customer_segment'
 ]
 
 # Sidebar untuk input data pengguna
@@ -50,12 +49,6 @@ input_data['days_for_shipping_real'] = st.sidebar.number_input(
 input_data['days_for_shipment_scheduled'] = st.sidebar.number_input(
     "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1, value=3
 )
-input_data['shipping_mode'] = st.sidebar.selectbox(
-    "Shipping Mode", options=["Standard Class", "Second Class", "First Class", "Same Day"]
-)
-input_data['customer_segment'] = st.sidebar.selectbox(
-    "Customer Segment", options=["Consumer", "Corporate", "Home Office"]
-)
 input_data['order_item_quantity'] = st.sidebar.number_input(
     "Order Item Quantity", min_value=1, max_value=100, step=1, value=1
 )
@@ -65,12 +58,39 @@ input_data['sales'] = st.sidebar.number_input(
 input_data['order_profit_per_order'] = st.sidebar.number_input(
     "Order Profit Per Order", min_value=-500.0, max_value=500.0, step=1.0, value=10.0
 )
-input_data['late_delivery_risk'] = st.sidebar.selectbox(
-    "Late Delivery Risk", options=[0, 1]
+input_data['shipping_mode'] = st.sidebar.selectbox(
+    "Shipping Mode", options=["Standard Class", "Second Class", "First Class", "Same Day"]
+)
+input_data['customer_segment'] = st.sidebar.selectbox(
+    "Customer Segment", options=["Consumer", "Corporate", "Home Office"]
 )
 
 # Konversi input pengguna ke DataFrame
 input_df = pd.DataFrame([input_data])
+
+# One-Hot Encoding untuk fitur kategorikal
+def preprocess_input(input_df):
+    # Mapping untuk shipping_mode
+    shipping_mode_mapping = {
+        "Standard Class": 0,
+        "Second Class": 1,
+        "First Class": 2,
+        "Same Day": 3
+    }
+    input_df['shipping_mode'] = input_df['shipping_mode'].map(shipping_mode_mapping)
+
+    # Mapping untuk customer_segment
+    customer_segment_mapping = {
+        "Consumer": 0,
+        "Corporate": 1,
+        "Home Office": 2
+    }
+    input_df['customer_segment'] = input_df['customer_segment'].map(customer_segment_mapping)
+
+    return input_df
+
+# Preproses input pengguna
+input_df = preprocess_input(input_df)
 
 st.write("### Input Data yang Diberikan:")
 st.write(input_df)
