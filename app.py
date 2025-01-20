@@ -18,16 +18,15 @@ def load_data():
         return pd.read_csv(DATA_PATH, encoding='ISO-8859-1')
 
 def preprocess_data(data):
-    # Daftar kolom yang harus ada
     required_columns = ['order date (DateOrders)', 'shipping date (DateOrders)', 'Category Name']
-    
-    # Periksa keberadaan kolom
     missing_columns = [col for col in required_columns if col not in data.columns]
+    
     if missing_columns:
-        st.error(f"The following required columns are missing in the dataset: {missing_columns}")
-        st.stop()
+        # Jika kolom hilang, tambahkan dengan nilai default (None)
+        for col in missing_columns:
+            data[col] = None
+        st.warning(f"Missing columns have been added with default values: {missing_columns}")
 
-    # Pastikan kolom sesuai dengan dataset
     date_order_col = 'order date (DateOrders)' if 'order date (DateOrders)' in data.columns else 'Order Date'
     shipping_date_col = 'shipping date (DateOrders)' if 'shipping date (DateOrders)' in data.columns else 'Shipping Date'
 
@@ -48,22 +47,21 @@ def preprocess_data(data):
     return data
 
 def main():
-    # Judul aplikasi
     st.title("Shipment Time Prediction App")
     st.write("This app predicts shipment delivery times based on provided inputs.")
 
-    # Load model dan data
     model = load_model()
     raw_data = load_data()
 
-    # Debugging: Menampilkan kolom dataset
+    # Debugging: Tampilkan data yang di-load
+    st.write("Loaded Dataset Sample:", raw_data.head())
     st.write("Dataset Columns:", raw_data.columns.tolist())
 
     # Preprocess dataset
     data = preprocess_data(raw_data)
     st.write("Preprocessed Dataset Columns:", data.columns.tolist())
 
-    # Input section (berdasarkan fitur dalam dataset)
+    # Input features
     st.write("### Input Features")
     order_year = st.number_input("Order Year", min_value=2000, max_value=2025, step=1)
     order_month = st.number_input("Order Month", min_value=1, max_value=12, step=1)
@@ -74,7 +72,6 @@ def main():
     demand = st.number_input("Demand (units):", min_value=1, step=1)
     weight = st.number_input("Weight (kg):", min_value=0.1, step=0.1)
 
-    # One-hot encoded categorical columns
     categorical_features = {
         "Product Category": data.filter(like="Product Category").columns.tolist(),
         "Warehouse": data.filter(like="Warehouse").columns.tolist(),
@@ -82,12 +79,10 @@ def main():
     }
 
     input_data = {}
-
     for feature, options in categorical_features.items():
         selected_option = st.selectbox(f"Select {feature}:", options)
         input_data.update({col: 1 if col == selected_option else 0 for col in options})
 
-    # Tambahkan fitur numerik ke input_data
     input_data.update({
         "order_year": order_year,
         "order_month": order_month,
@@ -99,12 +94,8 @@ def main():
         "weight": weight
     })
 
-    # Predict button
     if st.button("Predict Delivery Time"):
-        # Konversi input_data ke DataFrame
         input_df = pd.DataFrame([input_data])
-
-        # Prediksi
         try:
             prediction = model.predict(input_df)[0]
             st.success(f"Estimated Delivery Time: {prediction} days")
