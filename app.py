@@ -5,14 +5,13 @@ import pickle
 # Fungsi untuk memuat model
 @st.cache_resource
 def load_model():
-    with open('best_decision_tree_model.pkl', 'rb') as file:
-        model = pickle.load(file)
-    return model
-
-# Fungsi untuk memuat dataset
-@st.cache_data
-def load_dataset():
-    return pd.read_csv('DataCoSupplyChainDataset.csv', encoding='ISO-8859-1')
+    try:
+        with open('best_decision_tree_model.pkl', 'rb') as file:
+            model = pickle.load(file)
+        return model
+    except Exception as e:
+        st.error(f"Gagal memuat model: {e}")
+        return None
 
 # Judul aplikasi
 st.title("Aplikasi Prediksi Keterlambatan Pengiriman")
@@ -20,22 +19,12 @@ st.title("Aplikasi Prediksi Keterlambatan Pengiriman")
 # Deskripsi aplikasi
 st.write("Aplikasi ini memprediksi apakah pengiriman akan terlambat berdasarkan input data.")
 
-# Memuat dataset dan model
-dataset = load_dataset()
+# Muat model
 model = load_model()
+if model is None:
+    st.stop()  # Hentikan aplikasi jika model tidak berhasil dimuat
 
-# Menampilkan informasi dataset
-st.write(f"Dataset memiliki {dataset.shape[0]} baris dan {dataset.shape[1]} kolom.")
-st.write("Nama kolom asli dalam dataset:")
-st.write(dataset.columns.tolist())
-
-# Normalisasi nama kolom (lowercase, tanpa spasi)
-dataset.columns = dataset.columns.str.strip().str.lower().str.replace(' ', '_').str.replace(r'[\(\)]', '', regex=True)
-
-st.write("Nama kolom setelah normalisasi:")
-st.write(dataset.columns.tolist())
-
-# Pastikan nama fitur sesuai dengan dataset yang sudah dinormalisasi
+# Fitur yang dibutuhkan model
 fitur_model = [
     'days_for_shipping_real',
     'days_for_shipment_scheduled',
@@ -47,44 +36,57 @@ fitur_model = [
     'late_delivery_risk'
 ]
 
-missing_features = [f for f in fitur_model if f not in dataset.columns]
-if missing_features:
-    st.error(f"Kolom berikut tidak ditemukan dalam dataset: {missing_features}")
-else:
-    # Input pengguna berdasarkan fitur yang diperlukan model
-    st.sidebar.header("Input Data Pengguna")
-    input_data = {}
+# Sidebar untuk input data pengguna
+st.sidebar.header("Masukkan Data untuk Prediksi")
+input_data = {}
 
-    for fitur in fitur_model:
-        if dataset[fitur].dtype == 'object':
-            options = dataset[fitur].unique()
-            input_data[fitur] = st.sidebar.selectbox(f"{fitur}", options)
+# Form input untuk masing-masing fitur
+input_data['days_for_shipping_real'] = st.sidebar.number_input(
+    "Days for Shipping (Real)", min_value=0, max_value=100, step=1, value=5
+)
+input_data['days_for_shipment_scheduled'] = st.sidebar.number_input(
+    "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1, value=3
+)
+input_data['shipping_mode'] = st.sidebar.selectbox(
+    "Shipping Mode", options=["Standard Class", "Second Class", "First Class", "Same Day"]
+)
+input_data['customer_segment'] = st.sidebar.selectbox(
+    "Customer Segment", options=["Consumer", "Corporate", "Home Office"]
+)
+input_data['order_item_quantity'] = st.sidebar.number_input(
+    "Order Item Quantity", min_value=1, max_value=100, step=1, value=1
+)
+input_data['sales'] = st.sidebar.number_input(
+    "Sales", min_value=0.0, max_value=10000.0, step=1.0, value=100.0
+)
+input_data['order_profit_per_order'] = st.sidebar.number_input(
+    "Order Profit Per Order", min_value=-500.0, max_value=500.0, step=1.0, value=10.0
+)
+input_data['late_delivery_risk'] = st.sidebar.selectbox(
+    "Late Delivery Risk", options=[0, 1]
+)
+
+# Konversi input pengguna ke DataFrame
+input_df = pd.DataFrame([input_data])
+
+st.write("### Input Data yang Diberikan:")
+st.write(input_df)
+
+# Prediksi berdasarkan input pengguna
+if st.button("Prediksi"):
+    try:
+        # Lakukan prediksi
+        prediction = model.predict(input_df)[0]
+        prediction_proba = model.predict_proba(input_df)[0]
+
+        # Tampilkan hasil prediksi
+        if prediction == 1:
+            st.write("### Hasil Prediksi: Pengiriman akan **TERLAMBAT**.")
         else:
-            input_data[fitur] = st.sidebar.number_input(
-                f"{fitur}",
-                min_value=float(dataset[fitur].min()),
-                max_value=float(dataset[fitur].max())
-            )
+            st.write("### Hasil Prediksi: Pengiriman **TEPAT WAKTU**.")
 
-    # Konversi input pengguna ke DataFrame
-    input_df = pd.DataFrame([input_data])
-
-    st.write("### Input yang Diberikan:")
-    st.write(input_df)
-
-    # Prediksi berdasarkan input pengguna
-    if st.button("Prediksi"):
-        try:
-            prediction = model.predict(input_df)[0]
-            prediction_proba = model.predict_proba(input_df)[0]
-
-            if prediction == 1:
-                st.write("### Hasil Prediksi: Pengiriman akan TERLAMBAT.")
-            else:
-                st.write("### Hasil Prediksi: Pengiriman TEPAT WAKTU.")
-
-            st.write("Probabilitas Prediksi:")
-            st.write(f"Tepat Waktu: {prediction_proba[0]:.2f}, Terlambat: {prediction_proba[1]:.2f}")
-
-        except Exception as e:
-            st.error(f"Terjadi kesalahan saat melakukan prediksi: {e}")
+        st.write("### Probabilitas Prediksi:")
+        st.write(f"- Tepat Waktu: {prediction_proba[0]:.2f}")
+        st.write(f"- Terlambat: {prediction_proba[1]:.2f}")
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat melakukan prediksi: {e}")
