@@ -15,7 +15,7 @@ uploaded_file = st.sidebar.file_uploader("Upload your dataset (CSV format)", typ
 if uploaded_file is not None:
     # Load dataset from uploaded file
     try:
-        data = pd.read_csv(uploaded_file, encoding='utf-8')
+        data = pd.read_csv(uploaded_file, encoding='ISO-8859-1')
         st.success("Dataset uploaded successfully!")
     except Exception as e:
         st.error(f"Failed to load the dataset: {e}")
