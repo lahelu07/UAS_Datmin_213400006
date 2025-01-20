@@ -12,7 +12,7 @@ def load_model():
 # Fungsi untuk memuat dataset
 @st.cache_data
 def load_dataset():
-    return pd.read_csv('DataCoSupplyChainDataset.csv')
+    return pd.read_csv('DataCoSupplyChainDataset.csv', encoding='ISO-8859-1')
 
 # Judul aplikasi
 st.title("Aplikasi Prediksi Keterlambatan Pengiriman")
