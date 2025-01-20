@@ -27,15 +27,6 @@ model = load_model()
 if model is None:
     st.stop()  # Hentikan aplikasi jika model tidak valid
 
-# Fitur yang dibutuhkan model
-fitur_model = [
-    'days_for_shipping_real',
-    'days_for_shipment_scheduled',
-    'order_item_quantity',
-    'sales',
-    'order_profit_per_order'
-]
-
 # Sidebar untuk input data pengguna
 st.sidebar.header("Masukkan Data untuk Prediksi")
 input_data = {}
@@ -66,6 +57,10 @@ st.write(input_df)
 # Prediksi berdasarkan input pengguna
 if st.button("Prediksi"):
     try:
+        # Debug: tampilkan data yang dikirim ke model
+        st.write("Data yang dikirim ke model:")
+        st.write(input_df)
+
         # Lakukan prediksi
         prediction = model.predict(input_df)[0]
 
