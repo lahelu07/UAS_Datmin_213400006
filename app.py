@@ -18,25 +18,32 @@ def load_data():
         return pd.read_csv(DATA_PATH, encoding='ISO-8859-1')
 
 def preprocess_data(data):
-    # Check for required columns
+    # Daftar kolom yang harus ada
     required_columns = ['order date (DateOrders)', 'shipping date (DateOrders)', 'Category Name']
+    
+    # Periksa keberadaan kolom
     missing_columns = [col for col in required_columns if col not in data.columns]
     if missing_columns:
         st.error(f"The following required columns are missing in the dataset: {missing_columns}")
         st.stop()
 
+    # Jika nama kolom berbeda, gunakan nama yang sesuai
+    date_order_col = 'order date (DateOrders)' if 'order date (DateOrders)' in data.columns else 'Order Date'
+    shipping_date_col = 'shipping date (DateOrders)' if 'shipping date (DateOrders)' in data.columns else 'Shipping Date'
+
     # Feature engineering
-    data['order_year'] = pd.DatetimeIndex(data['order date (DateOrders)']).year
-    data['order_month'] = pd.DatetimeIndex(data['order date (DateOrders)']).month
-    data['order_day'] = pd.DatetimeIndex(data['order date (DateOrders)']).day
-    data['shipping_year'] = pd.DatetimeIndex(data['shipping date (DateOrders)']).year
-    data['shipping_month'] = pd.DatetimeIndex(data['shipping date (DateOrders)']).month
-    data['shipping_day'] = pd.DatetimeIndex(data['shipping date (DateOrders)']).day
+    data['order_year'] = pd.DatetimeIndex(data[date_order_col]).year
+    data['order_month'] = pd.DatetimeIndex(data[date_order_col]).month
+    data['order_day'] = pd.DatetimeIndex(data[date_order_col]).day
+    data['shipping_year'] = pd.DatetimeIndex(data[shipping_date_col]).year
+    data['shipping_month'] = pd.DatetimeIndex(data[shipping_date_col]).month
+    data['shipping_day'] = pd.DatetimeIndex(data[shipping_date_col]).day
 
-    # Drop unused columns
-    data.drop(columns=['order date (DateOrders)', 'shipping date (DateOrders)', 'Category Name'], inplace=True)
+    # Drop unused columns jika ada
+    columns_to_drop = [date_order_col, shipping_date_col, 'Category Name']
+    data.drop(columns=[col for col in columns_to_drop if col in data.columns], inplace=True)
 
-    # One-hot encoding for categorical columns
+    # One-hot encoding
     data = pd.get_dummies(data)
     return data
 
