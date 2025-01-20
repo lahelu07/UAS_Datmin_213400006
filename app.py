@@ -24,16 +24,24 @@ st.write("Aplikasi ini memprediksi apakah pengiriman akan terlambat berdasarkan 
 dataset = load_dataset()
 model = load_model()
 
-# Normalisasi nama kolom dalam dataset
-dataset.columns = (
-    dataset.columns.str.strip().str.lower().str.replace(' ', '_').str.replace(r'[()]', '', regex=True)
-)
+# Periksa apakah dataset kosong
+if dataset.empty:
+    st.error("Dataset kosong! Pastikan file DataCoSupplyChainDataset.csv memiliki data.")
+    st.stop()
 
-# Menampilkan nama kolom dalam dataset
-st.write("**Nama kolom dalam dataset (setelah normalisasi):**")
+# Debugging: Tampilkan informasi dataset
+st.write(f"Dataset memiliki {dataset.shape[0]} baris dan {dataset.shape[1]} kolom.")
+st.write("**Nama kolom asli dalam dataset:**")
 st.write(dataset.columns.tolist())
 
-# Daftar fitur yang diperlukan model (setelah normalisasi)
+# Normalisasi nama kolom
+dataset.columns = dataset.columns.str.strip().str.lower().str.replace(' ', '_').str.replace(r'[^\w]', '')
+
+# Debugging: Tampilkan nama kolom setelah normalisasi
+st.write("**Nama kolom setelah normalisasi:**")
+st.write(dataset.columns.tolist())
+
+# Pastikan nama fitur sesuai dengan dataset Anda
 fitur_model = [
     'days_for_shipping_real',
     'days_for_shipment_scheduled',
@@ -45,15 +53,14 @@ fitur_model = [
     'late_delivery_risk'
 ]
 
-# Periksa apakah semua fitur tersedia dalam dataset
-missing_columns = [fitur for fitur in fitur_model if fitur not in dataset.columns]
-if missing_columns:
-    st.error(f"Kolom berikut tidak ditemukan dalam dataset: {missing_columns}")
-    st.stop()  # Hentikan eksekusi jika ada kolom yang hilang
+# Validasi apakah kolom dalam fitur_model ada di dataset
+kolom_tidak_ditemukan = [kolom for kolom in fitur_model if kolom not in dataset.columns]
+if kolom_tidak_ditemukan:
+    st.error(f"Kolom berikut tidak ditemukan dalam dataset: {kolom_tidak_ditemukan}")
+    st.stop()
 
 # Input pengguna berdasarkan fitur yang diperlukan model
 st.sidebar.header("Input Data Pengguna")
-
 input_data = {}
 for fitur in fitur_model:
     if dataset[fitur].dtype == 'object':
@@ -61,8 +68,8 @@ for fitur in fitur_model:
         input_data[fitur] = st.sidebar.selectbox(f"{fitur}", options)
     else:
         input_data[fitur] = st.sidebar.number_input(
-            f"{fitur}", 
-            min_value=float(dataset[fitur].min()), 
+            f"{fitur}",
+            min_value=float(dataset[fitur].min()),
             max_value=float(dataset[fitur].max())
         )
 
@@ -71,6 +78,13 @@ input_df = pd.DataFrame([input_data])
 
 st.write("### Input yang Diberikan:")
 st.write(input_df)
+
+# Debugging untuk memastikan kolom input cocok dengan model
+if input_df.columns.tolist() != fitur_model:
+    st.error("Input data tidak cocok dengan fitur model. Periksa kembali nama kolom.")
+    st.stop()
+else:
+    st.write("Kolom input cocok dengan model.")
 
 # Prediksi berdasarkan input pengguna
 if st.button("Prediksi"):
@@ -83,7 +97,7 @@ if st.button("Prediksi"):
         else:
             st.write("### Hasil Prediksi: Pengiriman TEPAT WAKTU.")
 
-        st.write("**Probabilitas Prediksi:**")
+        st.write("Probabilitas Prediksi:")
         st.write(f"Tepat Waktu: {prediction_proba[0]:.2f}, Terlambat: {prediction_proba[1]:.2f}")
 
     except Exception as e:
