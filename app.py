@@ -24,39 +24,47 @@ st.write("Aplikasi ini memprediksi apakah pengiriman akan terlambat berdasarkan 
 dataset = load_dataset()
 model = load_model()
 
+# Normalisasi nama kolom dalam dataset
+dataset.columns = (
+    dataset.columns.str.strip().str.lower().str.replace(' ', '_').str.replace(r'[()]', '', regex=True)
+)
+
 # Menampilkan nama kolom dalam dataset
-st.write("Nama kolom dalam dataset:")
+st.write("**Nama kolom dalam dataset (setelah normalisasi):**")
 st.write(dataset.columns.tolist())
 
-# Pastikan nama fitur sesuai dengan dataset Anda
+# Daftar fitur yang diperlukan model (setelah normalisasi)
 fitur_model = [
-    'Days_for_shipping (real)',
-    'Days_for_shipment_(scheduled)',
-    'Shipping_Mode',
-    'Customer_Segment',
-    'Order_Item_Quantity',
-    'Sales',
-    'Order_Profit_Per_Order',
-    'Late_delivery_risk'
+    'days_for_shipping_real',
+    'days_for_shipment_scheduled',
+    'shipping_mode',
+    'customer_segment',
+    'order_item_quantity',
+    'sales',
+    'order_profit_per_order',
+    'late_delivery_risk'
 ]
+
+# Periksa apakah semua fitur tersedia dalam dataset
+missing_columns = [fitur for fitur in fitur_model if fitur not in dataset.columns]
+if missing_columns:
+    st.error(f"Kolom berikut tidak ditemukan dalam dataset: {missing_columns}")
+    st.stop()  # Hentikan eksekusi jika ada kolom yang hilang
 
 # Input pengguna berdasarkan fitur yang diperlukan model
 st.sidebar.header("Input Data Pengguna")
 
 input_data = {}
 for fitur in fitur_model:
-    if fitur in dataset.columns:
-        if dataset[fitur].dtype == 'object':
-            options = dataset[fitur].unique()
-            input_data[fitur] = st.sidebar.selectbox(f"{fitur}", options)
-        else:
-            input_data[fitur] = st.sidebar.number_input(
-                f"{fitur}", 
-                min_value=float(dataset[fitur].min()), 
-                max_value=float(dataset[fitur].max())
-            )
+    if dataset[fitur].dtype == 'object':
+        options = dataset[fitur].unique()
+        input_data[fitur] = st.sidebar.selectbox(f"{fitur}", options)
     else:
-        st.error(f"Kolom '{fitur}' tidak ditemukan dalam dataset. Periksa kembali nama kolom.")
+        input_data[fitur] = st.sidebar.number_input(
+            f"{fitur}", 
+            min_value=float(dataset[fitur].min()), 
+            max_value=float(dataset[fitur].max())
+        )
 
 # Konversi input pengguna ke DataFrame
 input_df = pd.DataFrame([input_data])
@@ -75,7 +83,7 @@ if st.button("Prediksi"):
         else:
             st.write("### Hasil Prediksi: Pengiriman TEPAT WAKTU.")
 
-        st.write("Probabilitas Prediksi:")
+        st.write("**Probabilitas Prediksi:**")
         st.write(f"Tepat Waktu: {prediction_proba[0]:.2f}, Terlambat: {prediction_proba[1]:.2f}")
 
     except Exception as e:
