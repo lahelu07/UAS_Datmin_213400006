@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
-import pickle
+import joblib
 
 # Fungsi untuk memuat model
 @st.cache_resource
 def load_model():
     try:
         with open('best_decision_tree_model(final).pkl', 'rb') as file:
-            model = pickle.load(file)
+            model = joblib.load(file)
         if not hasattr(model, "predict"):
             st.error("File .pkl tidak berisi model prediksi yang valid. Pastikan file adalah model Scikit-learn.")
             return None
