@@ -12,7 +12,7 @@ def load_model():
 # Fungsi untuk memuat dataset
 @st.cache_data
 def load_dataset():
-    return pd.read_csv('DataCoSupplyChainDataset.csv', encoding='ISO-8859-1')
+    return pd.read_csv('DataCoSupplyChainDataset.csv')
 
 # Judul aplikasi
 st.title("Aplikasi Prediksi Keterlambatan Pengiriman")
@@ -24,21 +24,22 @@ st.write("Aplikasi ini memprediksi apakah pengiriman akan terlambat berdasarkan 
 dataset = load_dataset()
 model = load_model()
 
-# Menampilkan nama kolom dalam dataset
-st.write("Nama kolom dalam dataset:")
-st.write(dataset.columns.tolist())
-
-# Pastikan nama fitur sesuai dengan dataset Anda
+# Normalisasi nama kolom
+dataset.columns = dataset.columns.str.strip().str.lower().str.replace(' ', '_')
 fitur_model = [
-    'Days for shipping (real)',
-    'Days for shipment (scheduled)',
-    'Shipping Mode',
-    'Customer Segment',
-    'Order Item Quantity',
-    'Sales',
-    'Order Profit Per Order',
-    'Late delivery risk'
+    'days_for_shipping_(real)',
+    'days_for_shipment_(scheduled)',
+    'shipping_mode',
+    'customer_segment',
+    'order_item_quantity',
+    'sales',
+    'order_profit_per_order',
+    'late_delivery_risk'
 ]
+
+# Menampilkan nama kolom dalam dataset
+st.write("Nama kolom dalam dataset (dengan panjang):")
+st.write({col: len(col) for col in dataset.columns})
 
 # Input pengguna berdasarkan fitur yang diperlukan model
 st.sidebar.header("Input Data Pengguna")
@@ -63,6 +64,12 @@ input_df = pd.DataFrame([input_data])
 
 st.write("### Input yang Diberikan:")
 st.write(input_df)
+
+# Debugging untuk memastikan kolom input cocok dengan model
+if input_df.columns.tolist() != fitur_model:
+    st.error("Input data tidak cocok dengan fitur model. Periksa kembali nama kolom.")
+else:
+    st.write("Kolom input cocok dengan model.")
 
 # Prediksi berdasarkan input pengguna
 if st.button("Prediksi"):
