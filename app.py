@@ -8,6 +8,9 @@ def load_model():
     try:
         with open('best_decision_tree_model.pkl', 'rb') as file:
             model = pickle.load(file)
+        if not hasattr(model, "predict"):
+            st.error("File .pkl tidak berisi model prediksi yang valid. Pastikan file adalah model Scikit-learn.")
+            return None
         return model
     except Exception as e:
         st.error(f"Gagal memuat model: {e}")
@@ -22,7 +25,7 @@ st.write("Aplikasi ini memprediksi apakah pengiriman akan terlambat berdasarkan 
 # Muat model
 model = load_model()
 if model is None:
-    st.stop()  # Hentikan aplikasi jika model tidak berhasil dimuat
+    st.stop()  # Hentikan aplikasi jika model tidak valid
 
 # Fitur yang dibutuhkan model
 fitur_model = [
