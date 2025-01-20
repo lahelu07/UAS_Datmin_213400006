@@ -27,7 +27,7 @@ def preprocess_data(data):
         st.error(f"The following required columns are missing in the dataset: {missing_columns}")
         st.stop()
 
-    # Jika nama kolom berbeda, gunakan nama yang sesuai
+    # Pastikan kolom sesuai dengan dataset
     date_order_col = 'order date (DateOrders)' if 'order date (DateOrders)' in data.columns else 'Order Date'
     shipping_date_col = 'shipping date (DateOrders)' if 'shipping date (DateOrders)' in data.columns else 'Shipping Date'
 
@@ -47,64 +47,69 @@ def preprocess_data(data):
     data = pd.get_dummies(data)
     return data
 
-# Initialize app
-st.title("Shipment Time Prediction App")
-st.write("This app predicts shipment delivery times based on provided inputs.")
+def main():
+    # Judul aplikasi
+    st.title("Shipment Time Prediction App")
+    st.write("This app predicts shipment delivery times based on provided inputs.")
 
-# Load resources
-model = load_model()
-raw_data = load_data()
+    # Load model dan data
+    model = load_model()
+    raw_data = load_data()
 
-# Debugging step: Display dataset columns
-st.write("Dataset Columns:", raw_data.columns.tolist())
+    # Debugging: Menampilkan kolom dataset
+    st.write("Dataset Columns:", raw_data.columns.tolist())
 
-# Preprocess dataset
-data = preprocess_data(raw_data)
+    # Preprocess dataset
+    data = preprocess_data(raw_data)
+    st.write("Preprocessed Dataset Columns:", data.columns.tolist())
 
-# Input section (based on features in X)
-st.write("### Input Features")
-order_year = st.number_input("Order Year", min_value=2000, max_value=2025, step=1)
-order_month = st.number_input("Order Month", min_value=1, max_value=12, step=1)
-order_day = st.number_input("Order Day", min_value=1, max_value=31, step=1)
-shipping_year = st.number_input("Shipping Year", min_value=2000, max_value=2025, step=1)
-shipping_month = st.number_input("Shipping Month", min_value=1, max_value=12, step=1)
-shipping_day = st.number_input("Shipping Day", min_value=1, max_value=31, step=1)
-demand = st.number_input("Demand (units):", min_value=1, step=1)
-weight = st.number_input("Weight (kg):", min_value=0.1, step=0.1)
+    # Input section (berdasarkan fitur dalam dataset)
+    st.write("### Input Features")
+    order_year = st.number_input("Order Year", min_value=2000, max_value=2025, step=1)
+    order_month = st.number_input("Order Month", min_value=1, max_value=12, step=1)
+    order_day = st.number_input("Order Day", min_value=1, max_value=31, step=1)
+    shipping_year = st.number_input("Shipping Year", min_value=2000, max_value=2025, step=1)
+    shipping_month = st.number_input("Shipping Month", min_value=1, max_value=12, step=1)
+    shipping_day = st.number_input("Shipping Day", min_value=1, max_value=31, step=1)
+    demand = st.number_input("Demand (units):", min_value=1, step=1)
+    weight = st.number_input("Weight (kg):", min_value=0.1, step=0.1)
 
-# One-hot encoded categorical columns
-categorical_features = {
-    "Product Category": data.filter(like="Product Category").columns.tolist(),
-    "Warehouse": data.filter(like="Warehouse").columns.tolist(),
-    "Priority": data.filter(like="Priority").columns.tolist()
-}
+    # One-hot encoded categorical columns
+    categorical_features = {
+        "Product Category": data.filter(like="Product Category").columns.tolist(),
+        "Warehouse": data.filter(like="Warehouse").columns.tolist(),
+        "Priority": data.filter(like="Priority").columns.tolist()
+    }
 
-input_data = {}
+    input_data = {}
 
-for feature, options in categorical_features.items():
-    selected_option = st.selectbox(f"Select {feature}:", options)
-    input_data.update({col: 1 if col == selected_option else 0 for col in options})
+    for feature, options in categorical_features.items():
+        selected_option = st.selectbox(f"Select {feature}:", options)
+        input_data.update({col: 1 if col == selected_option else 0 for col in options})
 
-# Add numerical features to input_data
-input_data.update({
-    "order_year": order_year,
-    "order_month": order_month,
-    "order_day": order_day,
-    "shipping_year": shipping_year,
-    "shipping_month": shipping_month,
-    "shipping_day": shipping_day,
-    "demand": demand,
-    "weight": weight
-})
+    # Tambahkan fitur numerik ke input_data
+    input_data.update({
+        "order_year": order_year,
+        "order_month": order_month,
+        "order_day": order_day,
+        "shipping_year": shipping_year,
+        "shipping_month": shipping_month,
+        "shipping_day": shipping_day,
+        "demand": demand,
+        "weight": weight
+    })
 
-# Predict button
-if st.button("Predict Delivery Time"):
-    # Convert input_data to DataFrame
-    input_df = pd.DataFrame([input_data])
+    # Predict button
+    if st.button("Predict Delivery Time"):
+        # Konversi input_data ke DataFrame
+        input_df = pd.DataFrame([input_data])
 
-    # Make prediction
-    try:
-        prediction = model.predict(input_df)[0]
-        st.success(f"Estimated Delivery Time: {prediction} days")
-    except Exception as e:
-        st.error(f"An error occurred during prediction: {e}")
+        # Prediksi
+        try:
+            prediction = model.predict(input_df)[0]
+            st.success(f"Estimated Delivery Time: {prediction} days")
+        except Exception as e:
+            st.error(f"An error occurred during prediction: {e}")
+
+if __name__ == "__main__":
+    main()
