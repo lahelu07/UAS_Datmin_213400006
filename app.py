@@ -3,8 +3,8 @@ import pandas as pd
 import pickle
 
 # Load model and data
-MODEL_PATH = 'best_decision_tree_model.pkl'
-DATA_PATH = 'DataCoSupplyChainDataset.csv'
+MODEL_PATH = '/mnt/data/best_decision_tree_model.pkl'
+DATA_PATH = '/mnt/data/DataCoSupplyChainDataset.csv'
 
 def load_model():
     with open(MODEL_PATH, 'rb') as file:
@@ -12,7 +12,10 @@ def load_model():
     return model
 
 def load_data():
-    return pd.read_csv(DATA_PATH)
+    try:
+        return pd.read_csv(DATA_PATH, encoding='utf-8')
+    except UnicodeDecodeError:
+        return pd.read_csv(DATA_PATH, encoding='ISO-8859-1')
 
 # Initialize app
 st.title("Shipment Time Prediction App")
