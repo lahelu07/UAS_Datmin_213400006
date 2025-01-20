@@ -3,8 +3,8 @@ import pandas as pd
 import pickle
 
 # Load model and data
-MODEL_PATH = '/mnt/data/best_decision_tree_model.pkl'
-DATA_PATH = '/mnt/data/DataCoSupplyChainDataset.csv'
+MODEL_PATH = 'best_decision_tree_model.pkl'
+DATA_PATH = 'DataCoSupplyChainDataset.csv'
 
 def load_model():
     with open(MODEL_PATH, 'rb') as file:
