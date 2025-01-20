@@ -18,8 +18,10 @@ except FileNotFoundError:
 # Define the expected features
 expected_features = [
     'Benefit per order', 'Category Id', 'Customer Segment_Consumer',
-    'Customer Segment_Corporate', 'Customer Segment_Home Office', 
-    # ... add all other features used during training
+    'Customer Segment_Corporate', 'Customer Segment_Home Office',
+    'Customer Zipcode', 'Delivery Status_Late delivery',
+    'Delivery Status_Advance shipping', 'Delivery Status_Shipping canceled',
+    'Delivery Status_Shipping on time',  # Add other features used during training
 ]
 
 # Collect input features from the user
@@ -31,7 +33,7 @@ with st.form("prediction_form"):
     order_date_input = st.date_input("Order Date", datetime(2022, 1, 1))
     shipping_date_input = st.date_input("Shipping Date", datetime(2022, 1, 2))
 
-    # Additional inputs (replace with actual expected features)
+    # Additional inputs
     benefit_per_order = st.number_input("Benefit per Order", value=0.0, step=0.1)
     category_id = st.selectbox("Category ID", [1, 2, 3, 4])  # Example categories
     customer_segment = st.selectbox(
@@ -60,10 +62,16 @@ if submit_button:
         }
         segment_features[f"Customer Segment_{customer_segment}"] = 1
 
-        # Create input dataframe
+        # Create input dictionary
         input_data = {
             'Benefit per order': [benefit_per_order],
             'Category Id': [category_id],
+            # Add other default feature values (if required)
+            'Customer Zipcode': [0],  # Replace 0 with actual data if required
+            'Delivery Status_Late delivery': [0],
+            'Delivery Status_Advance shipping': [0],
+            'Delivery Status_Shipping canceled': [0],
+            'Delivery Status_Shipping on time': [1],  # Assume "on time" by default
         }
         input_data.update(segment_features)  # Add one-hot encoded segment features
 
@@ -72,6 +80,7 @@ if submit_button:
             if feature not in input_data:
                 input_data[feature] = [0]  # Default value for missing features
 
+        # Create input dataframe
         input_df = pd.DataFrame(input_data)
         st.write("### Input Data Preview")
         st.dataframe(input_df)
