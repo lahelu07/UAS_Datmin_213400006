@@ -18,13 +18,12 @@ except FileNotFoundError:
 # Define the full list of features used during training
 expected_features = [
     'Benefit per order', 'Category Id', 'Customer Zipcode',
-    'Delivery Status_Late delivery', 
-    'Delivery Status_Advance shipping', 
-    'Delivery Status_Shipping canceled', 
-    'Delivery Status_Shipping on time',
-    'Customer Segment_Consumer', 'Customer Segment_Corporate', 'Customer Segment_Home Office',
+    'Delivery Status_Late delivery', 'Delivery Status_Advance shipping', 
+    'Delivery Status_Shipping canceled', 'Delivery Status_Shipping on time',
     'Department Name_Apparel', 'Department Name_Book Shop', 'Department Name_Discs Shop',
-    'Department Name_Fan Shop', 'Department Name_Fitness',
+    'Department Name_Fan Shop', 'Department Name_Fitness', 'Department Name_Footwear',
+    'Department Name_Golf', 'Department Name_Health and Beauty', 'Department Name_Outdoors',
+    'Department Name_Pet Shop',
 ]
 
 # Collect input features from the user
@@ -56,21 +55,17 @@ if submit_button:
         # Calculate delay in days
         delay_days = (shipping_date - order_date).days
 
-        # Create input dictionary
-        input_data = {
-            'Benefit per order': [benefit_per_order],
-            'Category Id': [category_id],
-            'Customer Zipcode': [0],  # Replace 0 with actual data if required
-            'Delivery Status_Late delivery': [1 if delay_days > 0 else 0],
-            'Delivery Status_Advance shipping': [1 if delay_days < 0 else 0],
-            'Delivery Status_Shipping canceled': [0],  # Assuming no canceled shipping
-            'Delivery Status_Shipping on time': [1 if delay_days == 0 else 0],
-        }
+        # Create input dictionary with default values for all expected features
+        input_data = {feature: [0] for feature in expected_features}
 
-        # Add missing features with default values (0)
-        for feature in expected_features:
-            if feature not in input_data:
-                input_data[feature] = [0]  # Default value for missing features
+        # Update input data with actual values
+        input_data['Benefit per order'] = [benefit_per_order]
+        input_data['Category Id'] = [category_id]
+        input_data['Customer Zipcode'] = [0]  # Replace with actual data if required
+        input_data['Delivery Status_Late delivery'] = [1 if delay_days > 0 else 0]
+        input_data['Delivery Status_Advance shipping'] = [1 if delay_days < 0 else 0]
+        input_data['Delivery Status_Shipping canceled'] = [0]  # Assuming no canceled shipping
+        input_data['Delivery Status_Shipping on time'] = [1 if delay_days == 0 else 0]
 
         # Create input dataframe
         input_df = pd.DataFrame(input_data)
