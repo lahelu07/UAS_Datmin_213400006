@@ -17,7 +17,7 @@ except FileNotFoundError:
 
 # Define the full list of features used during training
 expected_features = [
-    'Benefit per order', 'Category Id', 'Customer Zipcode', 
+    'Benefit per order', 'Category Id', 'Customer Zipcode',
     'Delivery Status_Late delivery', 
     'Delivery Status_Advance shipping', 
     'Delivery Status_Shipping canceled', 
