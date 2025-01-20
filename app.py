@@ -20,16 +20,9 @@ uploaded_file = st.sidebar.file_uploader("Upload your dataset (CSV format)", typ
 
 if uploaded_file is not None:
     try:
-        # Detect file encoding
-        import chardet
-        rawdata = uploaded_file.read()
-        result = chardet.detect(rawdata)
-        encoding = result['encoding']
-
-        # Load dataset
-        uploaded_file.seek(0)
-        data = pd.read_csv(uploaded_file, encoding=encoding)
-        st.success(f"Dataset loaded successfully with encoding: {encoding}")
+        # Attempt to load dataset with ISO-8859-1 encoding
+        data = pd.read_csv(uploaded_file, encoding='ISO-8859-1')
+        st.success("Dataset loaded successfully with ISO-8859-1 encoding.")
 
         # Display dataset columns
         st.write("### Dataset Columns")
@@ -76,6 +69,30 @@ if uploaded_file is not None:
         plt.xlabel("Delay (days)")
         plt.ylabel("Frequency")
         st.pyplot(plt)
+
+        # Make predictions for the dataset
+        if st.button("Predict Delays for Dataset"):
+            try:
+                # Ensure dataset contains necessary features for the model
+                model_features = getattr(model, "feature_names_in_", None)
+                if model_features is None:
+                    st.error("Model feature names are not accessible. Please check your model.")
+                    st.stop()
+
+                for feature in model_features:
+                    if feature not in data.columns:
+                        data[feature] = 0
+
+                input_data = data[model_features]
+
+                # Predict delays
+                predictions = model.predict(input_data)
+                data['Predicted Delay'] = predictions
+                st.write("### Dataset with Predicted Delays")
+                st.dataframe(data[['Order Date', 'Shipping Date', 'Delay', 'Predicted Delay']])
+
+            except Exception as e:
+                st.error(f"An error occurred during prediction: {e}")
 
     except Exception as e:
         st.error(f"Failed to load the dataset: {e}")
