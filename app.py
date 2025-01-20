@@ -42,19 +42,19 @@ input_data = {}
 
 # Form input untuk masing-masing fitur
 input_data['days_for_shipping_real'] = st.sidebar.number_input(
-    "Days for Shipping (Real)", min_value=0, max_value=100, step=1, value=5
+    "Days for Shipping (Real)", min_value=0, max_value=100, step=1, value=10
 )
 input_data['days_for_shipment_scheduled'] = st.sidebar.number_input(
-    "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1, value=3
+    "Days for Shipment (Scheduled)", min_value=0, max_value=100, step=1, value=7
 )
 input_data['order_item_quantity'] = st.sidebar.number_input(
-    "Order Item Quantity", min_value=1, max_value=100, step=1, value=1
+    "Order Item Quantity", min_value=1, max_value=100, step=1, value=2
 )
 input_data['sales'] = st.sidebar.number_input(
-    "Sales", min_value=0.0, max_value=10000.0, step=1.0, value=100.0
+    "Sales", min_value=0.0, max_value=10000.0, step=1.0, value=90.0
 )
 input_data['order_profit_per_order'] = st.sidebar.number_input(
-    "Order Profit Per Order", min_value=-500.0, max_value=500.0, step=1.0, value=10.0
+    "Order Profit Per Order", min_value=-500.0, max_value=500.0, step=1.0, value=500.0
 )
 
 # Konversi input pengguna ke DataFrame
@@ -63,19 +63,20 @@ input_df = pd.DataFrame([input_data])
 st.write("### Input Data yang Diberikan:")
 st.write(input_df)
 
-# Prediksi langsung setiap kali input berubah
-try:
-    # Lakukan prediksi
-    prediction = model.predict(input_df)[0]
+# Prediksi berdasarkan input pengguna
+if st.button("Prediksi"):
+    try:
+        # Lakukan prediksi
+        prediction = model.predict(input_df)[0]
 
-    # Konversi hasil prediksi ke dalam hari, jam, dan menit
-    total_hours = prediction * 24  # Konversi hari ke jam
-    days = int(total_hours // 24)
-    hours = int(total_hours % 24)
-    minutes = int((total_hours % 1) * 60)
+        # Konversi hasil prediksi ke dalam hari, jam, dan menit
+        total_hours = prediction * 24  # Konversi hari ke jam
+        days = int(total_hours // 24)
+        hours = int(total_hours % 24)
+        minutes = int((total_hours % 1) * 60)
 
-    # Tampilkan hasil prediksi
-    st.write(f"### Hasil Prediksi:")
-    st.write(f"Pengiriman kemungkinan akan terlambat selama **{days} hari, {hours} jam, dan {minutes} menit**.")
-except Exception as e:
-    st.error(f"Terjadi kesalahan saat melakukan prediksi: {e}")
+        # Tampilkan hasil prediksi
+        st.write(f"### Hasil Prediksi:")
+        st.write(f"Pengiriman kemungkinan akan terlambat selama **{days} hari, {hours} jam, dan {minutes} menit**.")
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat melakukan prediksi: {e}")
